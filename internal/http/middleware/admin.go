@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,6 +21,10 @@ func AdminAuth(validCode string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		// Trim whitespace for both codes
+		providedCode = strings.TrimSpace(providedCode)
+		validCode = strings.TrimSpace(validCode)
 
 		if providedCode != validCode {
 			c.JSON(http.StatusForbidden, gin.H{
