@@ -15,13 +15,32 @@
         {{if .Grouped}}
             {{range $groupSlug, $innovations := .Grouped}}
                 <div class="group">
-                    <h2 class="group-title">{{$groupSlug}}</h2>
+                    <h2 class="group-title">
+                        {{if eq $groupSlug "bumn-bumd"}}
+                            🏢 BUMN/BUMD
+                        {{else if eq $groupSlug "kementrian-lembaga-pt"}}
+                            🏛️ Kementerian/Lembaga/PT
+                        {{else if eq $groupSlug "pemda-kabupaten"}}
+                            🏘️ Pemerintah Daerah Kabupaten
+                        {{else}}
+                            📋 {{$groupSlug}}
+                        {{end}}
+                    </h2>
                     <div class="innovation-grid">
                         {{range $innovations}}
                             <a href="/{{.GroupSlug}}/{{.Slug}}" class="innovation-card">
-                                <h3>{{.Name}}</h3>
+                                <div class="card-header">
+                                    <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                        <path d="M2 17l10 5 10-5"></path>
+                                        <path d="M2 12l10 5 10-5"></path>
+                                    </svg>
+                                    <h3>{{.Name}}</h3>
+                                </div>
                                 {{if .Division}}
-                                    <p class="division">{{.Division | deref}}</p>
+                                    <div class="card-footer">
+                                        <span class="division">{{.Division | deref}}</span>
+                                    </div>
                                 {{end}}
                             </a>
                         {{end}}
