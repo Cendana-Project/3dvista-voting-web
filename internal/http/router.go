@@ -85,22 +85,23 @@ func SetupRouter(cfg *config.Config, pool *pgxpool.Pool, service domain.VoteServ
 	// Admin dashboard viewer (client-side, no server-side auth required)
 	router.GET("/admin/dashboard", adminHandler.ShowDashboardViewer)
 
-	// Admin routes - protected with X-ADMIN-CODE header (must be before /:group/:slug)
+	// Admin protected routes - protected with X-ADMIN-CODE header (must be before /:group/:slug)
 	if cfg.AdminCode != "" {
-		adminGroup := router.Group("/admin")
-
 		analyticsHandler := handlers.NewAnalyticsHandler(service, logger)
-
-		// API endpoint for JSON data
-		adminGroup.Use(middleware.AdminAuth(cfg.AdminCode))
-		adminGroup.GET("/analytics", analyticsHandler.ShowAnalytics)
-		adminGroup.GET("/api/data", analyticsHandler.GetAnalyticsData)
+		authMiddleware := middleware.AdminAuth(cfg.AdminCode)
+		
+		// Register protected routes directly with auth middleware
+		router.GET("/admin/analytics", authMiddleware, analyticsHandler.ShowAnalytics)
+		router.GET("/admin/api/data", authMiddleware, analyticsHandler.GetAnalyticsData)
 
 		logger.Info("Admin routes enabled",
 			"login_path", "/admin/login",
 			"dashboard_path", "/admin/dashboard",
 			"analytics_path", "/admin/analytics",
-			"api_path", "/admin/api/data")
+			"api_path", "/admin/api/data",
+			"admin_code_length", len(cfg.AdminCode))
+	} else {
+		logger.Warn("Admin routes disabled - AdminCode not configured")
 	}
 
 	// API handlers
