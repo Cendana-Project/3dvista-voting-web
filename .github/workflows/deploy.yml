@@ -3,7 +3,7 @@ name: Deploy Vote 3DVista
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
