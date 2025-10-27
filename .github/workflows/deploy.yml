@@ -25,14 +25,20 @@ jobs:
             # Check if directory exists, if not clone, if yes pull latest
             if [ ! -d "vote-3dvista" ]; then
               echo "📦 Cloning repository for the first time..."
-              git clone https://github.com/${{ github.repository }}.git vote-3dvista
+              # Try SSH first, fallback to HTTPS
+              if git clone git@github.com:${{ github.repository }}.git vote-3dvista 2>/dev/null; then
+                echo "✅ Cloned via SSH"
+              else
+                echo "⚠️ SSH clone failed, trying HTTPS..."
+                git clone https://github.com/${{ github.repository }}.git vote-3dvista
+              fi
             else
               echo "🔄 Repository exists, pulling latest changes..."
               cd vote-3dvista
               
               # Reset any local changes and pull latest
               git fetch origin
-              git reset --hard origin/main
+              git reset --hard origin/master
               git clean -fd
               
               cd ..
@@ -40,6 +46,11 @@ jobs:
             
             # Navigate to project directory
             cd vote-3dvista
+            
+            if [ ! -d ".git" ]; then
+              echo "❌ Not a valid git repository!"
+              exit 1
+            fi
             
             echo "📋 Current commit: $(git rev-parse HEAD)"
             echo "🌿 Current branch: $(git branch --show-current)"
@@ -60,9 +71,21 @@ jobs:
             
             echo "✅ Environment variables configured"
             
+            # Detect docker-compose command (v1 vs v2)
+            if command -v docker-compose &> /dev/null; then
+              DOCKER_COMPOSE_CMD="sudo docker-compose"
+            elif docker compose version &> /dev/null; then
+              DOCKER_COMPOSE_CMD="sudo docker compose"
+            else
+              echo "❌ Docker Compose not found!"
+              exit 1
+            fi
+            
+            echo "🔧 Using: $DOCKER_COMPOSE_CMD"
+            
             # Stop existing containers gracefully
             echo "🛑 Stopping existing containers..."
-            sudo docker-compose down || true
+            $DOCKER_COMPOSE_CMD down || true
             
             # Optional: Clean up old images to free space
             echo "🧹 Cleaning up old Docker images..."
@@ -70,7 +93,7 @@ jobs:
             
             # Build and start new containers
             echo "🔨 Building and starting containers..."
-            sudo docker-compose up -d --build
+            $DOCKER_COMPOSE_CMD up -d --build
             
             # Wait for containers to be healthy
             echo "⏳ Waiting for containers to be ready..."
@@ -78,25 +101,25 @@ jobs:
             
             # Verify containers are running
             echo "🔍 Verifying deployment..."
-            if sudo docker-compose ps | grep -q "Up"; then
+            if $DOCKER_COMPOSE_CMD ps | grep -q "Up"; then
               echo "✅ Deployment successful!"
               echo ""
               echo "📊 Container Status:"
-              sudo docker-compose ps
+              $DOCKER_COMPOSE_CMD ps
               echo ""
               echo "🌐 Application available at: ${{ secrets.APP_BASE_URL }}"
             else
               echo "❌ Deployment failed! Containers are not running."
               echo ""
               echo "📋 Container logs:"
-              sudo docker-compose logs
+              $DOCKER_COMPOSE_CMD logs
               exit 1
             fi
             
             # Show recent logs
             echo ""
             echo "📝 Recent application logs:"
-            sudo docker-compose logs --tail=20 app
+            $DOCKER_COMPOSE_CMD logs --tail=20 app
             
             echo ""
             echo "🎉 Deployment completed successfully!"
