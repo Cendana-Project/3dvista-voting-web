@@ -3,6 +3,7 @@ package http
 import (
 	"html/template"
 	"log/slog"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -32,8 +33,24 @@ func SetupRouter(cfg *config.Config, pool *pgxpool.Pool, service domain.VoteServ
 	})
 	router.LoadHTMLGlob("web/templates/*")
 
-	// Serve static files
-	router.Static("/static", "./web/static")
+	// Serve static files - use absolute path to avoid issues
+	staticDir, _ := filepath.Abs("./web/static")
+	router.Static("/static", staticDir)
+	logger.Info("Static files directory", "path", staticDir)
+	
+	// Add cache control headers for static files
+	router.Use(func(c *gin.Context) {
+		path := c.Request.URL.Path
+		if len(path) >= 8 && path[:8] == "/static/" {
+			// Cache static files for 1 day in production, no cache in development
+			if cfg.GinMode == "release" {
+				c.Header("Cache-Control", "public, max-age=86400")
+			} else {
+				c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+			}
+		}
+		c.Next()
+	})
 
 	// Global middleware
 	router.Use(middleware.RequestID())
