@@ -1,0 +1,103 @@
+name: Deploy Vote 3DVista
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy to VPS via Git Pull
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            echo "🚀 Starting deployment..."
+            
+            # Navigate to deployment directory
+            cd /home/bitnami/
+            
+            # Check if directory exists, if not clone, if yes pull latest
+            if [ ! -d "vote-3dvista" ]; then
+              echo "📦 Cloning repository for the first time..."
+              git clone https://github.com/${{ github.repository }}.git vote-3dvista
+            else
+              echo "🔄 Repository exists, pulling latest changes..."
+              cd vote-3dvista
+              
+              # Reset any local changes and pull latest
+              git fetch origin
+              git reset --hard origin/main
+              git clean -fd
+              
+              cd ..
+            fi
+            
+            # Navigate to project directory
+            cd vote-3dvista
+            
+            echo "📋 Current commit: $(git rev-parse HEAD)"
+            echo "🌿 Current branch: $(git branch --show-current)"
+            
+            # Create .env file with secrets
+            echo "🔐 Setting up environment variables..."
+            cat > .env << EOF
+            DATABASE_URL=postgres://postgres:postgres@db:5432/voteweb?sslmode=disable
+            IP_HASH_SALT=${{ secrets.IP_HASH_SALT }}
+            TRUST_PROXY=true
+            ALLOWED_PROXY_CIDRS=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+            APP_BASE_URL=${{ secrets.APP_BASE_URL }}
+            PORT=8080
+            GIN_MODE=release
+            ADMIN_CODE=${{ secrets.ADMIN_CODE }}
+            SEED=false
+            EOF
+            
+            echo "✅ Environment variables configured"
+            
+            # Stop existing containers gracefully
+            echo "🛑 Stopping existing containers..."
+            sudo docker-compose down || true
+            
+            # Optional: Clean up old images to free space
+            echo "🧹 Cleaning up old Docker images..."
+            sudo docker system prune -f || true
+            
+            # Build and start new containers
+            echo "🔨 Building and starting containers..."
+            sudo docker-compose up -d --build
+            
+            # Wait for containers to be healthy
+            echo "⏳ Waiting for containers to be ready..."
+            sleep 10
+            
+            # Verify containers are running
+            echo "🔍 Verifying deployment..."
+            if sudo docker-compose ps | grep -q "Up"; then
+              echo "✅ Deployment successful!"
+              echo ""
+              echo "📊 Container Status:"
+              sudo docker-compose ps
+              echo ""
+              echo "🌐 Application available at: ${{ secrets.APP_BASE_URL }}"
+            else
+              echo "❌ Deployment failed! Containers are not running."
+              echo ""
+              echo "📋 Container logs:"
+              sudo docker-compose logs
+              exit 1
+            fi
+            
+            # Show recent logs
+            echo ""
+            echo "📝 Recent application logs:"
+            sudo docker-compose logs --tail=20 app
+            
+            echo ""
+            echo "🎉 Deployment completed successfully!"
+
