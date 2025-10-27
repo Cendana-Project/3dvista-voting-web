@@ -1,0 +1,217 @@
+{{ define "analytics_client.tmpl.html" }}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .analytics-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .stats-header {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.875rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead {
+            background: #f8f9fa;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            font-weight: 600;
+            color: #374151;
+        }
+        td {
+            color: #6b7280;
+        }
+        .progress-bar {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .vote-count {
+            font-weight: 600;
+            color: #2563eb;
+        }
+        .group-badge {
+            display: inline-block;
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body style="background: #f3f4f6;">
+    <div class="analytics-page">
+        <div class="header-actions">
+            <h1 style="margin: 0; color: #1f2937;">📊 Dashboard Analytics</h1>
+            <div>
+                <a href="/admin/login" class="btn btn-secondary" style="margin-right: 0.5rem;">Logout</a>
+                <a href="/" class="btn btn-primary">Kembali ke Beranda</a>
+            </div>
+        </div>
+
+        <div id="errorContainer"></div>
+        <div id="loadingContainer" class="loading">
+            <div class="spinner"></div>
+            <p>Memuat data analytics...</p>
+        </div>
+        <div id="contentContainer" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Get admin code from sessionStorage
+        const adminCode = sessionStorage.getItem('adminCode');
+
+        if (!adminCode) {
+            window.location.href = '/admin/login';
+        }
+
+        async function loadAnalytics() {
+            const loadingContainer = document.getElementById('loadingContainer');
+            const contentContainer = document.getElementById('contentContainer');
+            const errorContainer = document.getElementById('errorContainer');
+
+            try {
+                const response = await fetch('/admin/analytics', {
+                    method: 'GET',
+                    headers: {
+                        'X-ADMIN-CODE': adminCode
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        const data = await response.json();
+                        showError(data.error || 'Akses ditolak. Admin code tidak valid.');
+                        sessionStorage.removeItem('adminCode');
+                        setTimeout(() => {
+                            window.location.href = '/admin/login';
+                        }, 2000);
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const html = await response.text();
+                contentContainer.innerHTML = html;
+                loadingContainer.style.display = 'none';
+                contentContainer.style.display = 'block';
+
+            } catch (error) {
+                showError('Terjadi kesalahan: ' + error.message);
+                loadingContainer.style.display = 'none';
+            }
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerHTML = `<div class="alert-error">${message}</div>`;
+        }
+
+        // Load analytics on page load
+        loadAnalytics();
+    </script>
+</body>
+</html>
+{{ end }}
+

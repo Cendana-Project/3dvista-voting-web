@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: voteweb-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: voteweb
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - voteweb-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voteweb-app
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/voteweb?sslmode=disable
+      IP_HASH_SALT: ${IP_HASH_SALT:-change-me-please-super-long-random-string-for-production}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      ALLOWED_PROXY_CIDRS: ${ALLOWED_PROXY_CIDRS:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+      PORT: 8080
+      GIN_MODE: ${GIN_MODE:-release}
+      SEED: ${SEED:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - voteweb-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  voteweb-network:
+    driver: bridge
+
+

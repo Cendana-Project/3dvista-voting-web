@@ -1,0 +1,24 @@
+{{ define "error.tmpl.html" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="error-page">
+            <div class="error-content">
+                <h1>{{ .Title }}</h1>
+                <p>{{ .Message }}</p>
+                <a href="/" class="back-button">Kembali ke Beranda</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+{{ end }}
+
+

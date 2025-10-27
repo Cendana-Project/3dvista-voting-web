@@ -1,0 +1,112 @@
+{{ define "innovation.tmpl.html" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Innovation.Name }} - Vote</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+<div class="innovation-page">
+    <div class="innovation-header">
+        <h1>{{ .Innovation.Name }}</h1>
+        {{ if .Innovation.Division }}
+        <p class="division">{{ .Innovation.Division | deref }}</p>
+        {{ end }}
+        {{ if .Innovation.Description }}
+        <p class="description">{{ .Innovation.Description | deref }}</p>
+        {{ end }}
+    </div>
+
+    <div class="vote-section">
+        <div class="vote-count">
+            <span class="count-number" id="voteCount">{{ .VoteCount }}</span>
+            <span class="count-label">Total Vote</span>
+        </div>
+        
+        {{ if .HasVoted }}
+        <div class="vote-info">
+            <button id="voteBtn" class="vote-button" disabled>
+                <svg class="vote-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Sudah Vote
+            </button>
+            <p class="vote-notice">✓ Anda sudah memberikan vote untuk 1 karya inovasi</p>
+            <p class="vote-notice-sub">Sistem ini hanya mengizinkan 1 vote per pengguna</p>
+        </div>
+        {{ else }}
+        <button id="voteBtn" class="vote-button">
+            <svg class="vote-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+            </svg>
+            Vote
+        </button>
+        {{ end }}
+    </div>
+
+    <!-- Thank you modal -->
+    <dialog id="thankYouModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon success">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h2>Terima Kasih!</h2>
+            <p><strong>Vote Anda telah berhasil dicatat.</strong></p>
+            <p style="color: #666; font-size: 0.9em; margin-top: 0.5rem;">Anda telah menggunakan 1 vote Anda. Terima kasih telah berpartisipasi!</p>
+            <button onclick="closeModal()" class="modal-button">OK</button>
+        </div>
+    </dialog>
+
+    <!-- Already voted modal -->
+    <dialog id="alreadyVotedModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon warning">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <h2>Sudah Pernah Vote</h2>
+            <p><strong>Anda sudah memberikan vote untuk 1 karya inovasi.</strong></p>
+            <p style="color: #666; font-size: 0.9em; margin-top: 0.5rem;">Sistem ini hanya mengizinkan 1 vote per pengguna. Terima kasih telah berpartisipasi!</p>
+            <button onclick="closeModal()" class="modal-button">OK</button>
+        </div>
+    </dialog>
+
+    <!-- Error modal -->
+    <dialog id="errorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon error">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </div>
+            <h2>Terjadi Kesalahan</h2>
+            <p id="errorMessage">Silakan coba lagi nanti.</p>
+            <button onclick="closeModal()" class="modal-button">OK</button>
+        </div>
+    </dialog>
+</div>
+    </div>
+    <script>
+        const csrfToken = '{{ .CSRFToken }}';
+        const groupSlug = '{{ .Innovation.GroupSlug }}';
+        const slug = '{{ .Innovation.Slug }}';
+        const hasVoted = {{ if .HasVoted }}true{{ else }}false{{ end }};
+    </script>
+    <script src="/static/main.js"></script>
+</body>
+</html>
+{{ end }}
+
+

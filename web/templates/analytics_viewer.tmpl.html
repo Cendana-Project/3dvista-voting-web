@@ -1,0 +1,410 @@
+{{ define "analytics_viewer.tmpl.html" }}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .analytics-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .stats-header {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.875rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        thead {
+            background: #f8f9fa;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            font-weight: 600;
+            color: #374151;
+        }
+        td {
+            color: #6b7280;
+        }
+        .progress-bar {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+            min-width: 100px;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .vote-count {
+            font-weight: 600;
+            color: #2563eb;
+        }
+        .group-badge {
+            display: inline-block;
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body style="background: #f3f4f6;">
+    <div class="analytics-page">
+        <div class="header-actions">
+            <h1 style="margin: 0; color: #1f2937;">📊 Dashboard Analytics</h1>
+            <div>
+                <a href="/admin/login" class="btn btn-secondary" style="margin-right: 0.5rem;">Logout</a>
+                <a href="/" class="btn btn-primary">Kembali ke Beranda</a>
+            </div>
+        </div>
+
+        <div id="errorContainer"></div>
+        <div id="loadingContainer" class="loading">
+            <div class="spinner"></div>
+            <p>Memuat data analytics...</p>
+        </div>
+        <div id="contentContainer" style="display: none;">
+            <div class="stats-header" id="statsHeader"></div>
+            
+            <!-- Ranking Section -->
+            <div style="background: white; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2 style="margin: 0 0 1rem 0; color: #1f2937;">🏆 Top 3 per Divisi</h2>
+                <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 1.5rem 0;">Menampilkan 3 inovasi teratas per divisi</p>
+                <div id="rankingContainer"></div>
+            </div>
+            
+            <!-- Chart Section -->
+            <div style="background: white; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2 style="margin: 0 0 1rem 0; color: #1f2937;">📊 Vote Distribution Chart</h2>
+                <div id="voteChart"></div>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Inovasi</th>
+                            <th>Kategori</th>
+                            <th>Divisi</th>
+                            <th>Jumlah Suara</th>
+                            <th>Persentase</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get admin code from sessionStorage
+        const adminCode = sessionStorage.getItem('adminCode');
+
+        if (!adminCode) {
+            alert('Anda belum login. Redirecting...');
+            window.location.href = '/admin/login';
+        } else {
+            console.log('Admin code found, loading analytics...');
+            loadAnalytics(adminCode);
+        }
+        
+        async function loadAnalytics(adminCode) {
+            const loadingContainer = document.getElementById('loadingContainer');
+            const contentContainer = document.getElementById('contentContainer');
+            const errorContainer = document.getElementById('errorContainer');
+
+            try {
+                // Ensure admin code is valid ASCII
+                const sanitizedCode = String(adminCode).trim();
+                
+                const response = await fetch('/admin/api/data', {
+                    method: 'GET',
+                    headers: {
+                        'X-ADMIN-CODE': sanitizedCode
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        const data = await response.json();
+                        errorContainer.innerHTML = `<div class="alert-error">${data.error || 'Akses ditolak'}</div>`;
+                        sessionStorage.removeItem('adminCode');
+                        setTimeout(() => {
+                            window.location.href = '/admin/login';
+                        }, 2000);
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                renderAnalytics(data);
+                
+                loadingContainer.style.display = 'none';
+                contentContainer.style.display = 'block';
+
+            } catch (error) {
+                errorContainer.innerHTML = `<div class="alert-error">Terjadi kesalahan: ${error.message}</div>`;
+                loadingContainer.style.display = 'none';
+            }
+        }
+
+        function renderAnalytics(data) {
+            console.log('Received data:', data); // Debug
+            
+            // Render stats header
+            const statsHeader = document.getElementById('statsHeader');
+            statsHeader.innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Inovasi</h3>
+                    <div class="number">${data.total_innovations || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Suara</h3>
+                    <div class="number">${data.total_votes || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Voters</h3>
+                    <div class="number">${data.total_voters || 0}</div>
+                </div>
+            `;
+            
+            // Group by division and sort per division
+            const groupedByDivision = {};
+            data.innovations.forEach(stat => {
+                const division = stat.division || stat.Division || 'Lainnya';
+                if (!groupedByDivision[division]) {
+                    groupedByDivision[division] = [];
+                }
+                groupedByDivision[division].push(stat);
+            });
+            
+            // Sort each division by vote count
+            Object.keys(groupedByDivision).forEach(division => {
+                groupedByDivision[division].sort((a, b) => 
+                    (b.VoteCount || 0) - (a.VoteCount || 0)
+                );
+            });
+            
+            // Render Ranking by Division
+            renderDivisionRanking(groupedByDivision);
+            
+            // Render Chart for top innovations overall
+            const allInnovationsSorted = Object.values(groupedByDivision)
+                .flat()
+                .sort((a, b) => (b.VoteCount || 0) - (a.VoteCount || 0))
+                .slice(0, 10);
+            
+            renderSimpleChart(allInnovationsSorted);
+
+            // Render table (sorted by division then votes)
+            const tableBody = document.getElementById('tableBody');
+            const allSorted = Object.values(groupedByDivision)
+                .flat()
+                .sort((a, b) => (b.VoteCount || 0) - (a.VoteCount || 0));
+            
+            tableBody.innerHTML = allSorted.map(stat => {
+                console.log('Processing innovation:', stat); // Debug
+                
+                // Get fields (Go JSON uses snake_case for struct fields)
+                const name = stat.name || stat.Name || 'N/A';
+                const groupSlug = stat.group_slug || stat.GroupSlug || '';
+                const slug = stat.slug || stat.Slug || '';
+                const division = stat.division || stat.Division || '-';
+                const voteCount = stat.VoteCount || 0;
+                const votePercentage = stat.VotePercentage || 0;
+                
+                return `
+                <tr>
+                    <td>
+                        <strong>${name}</strong><br>
+                        <span class="group-badge">${groupSlug}</span>
+                    </td>
+                    <td>${slug}</td>
+                    <td>${division}</td>
+                    <td class="vote-count">${voteCount}</td>
+                    <td>
+                        <div>${votePercentage.toFixed(1)}%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${votePercentage}%"></div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+        
+        function renderDivisionRanking(groupedByDivision) {
+            const rankingContainer = document.getElementById('rankingContainer');
+            
+            let rankingHTML = '';
+            
+            Object.keys(groupedByDivision).sort().forEach(division => {
+                const innovations = groupedByDivision[division];
+                const top3 = innovations.slice(0, 3);
+                
+                if (top3.length === 0) return;
+                
+                rankingHTML += `
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="margin: 0 0 1rem 0; color: #1f2937; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb;">
+                            ${division}
+                        </h3>
+                        <div style="display: grid; gap: 0.75rem;">
+                            ${top3.map((stat, index) => {
+                                const name = stat.name || stat.Name || 'N/A';
+                                const voteCount = stat.VoteCount || 0;
+                                const rank = index + 1;
+                                const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+                                
+                                return `
+                                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: ${rank <= 3 ? '#fef3c7' : '#f9fafb'}; border-radius: 8px; border-left: 4px solid ${rank === 1 ? '#f59e0b' : rank === 2 ? '#94a3b8' : rank === 3 ? '#d97706' : '#e5e7eb'};">
+                                        <div style="font-size: 1.5rem; font-weight: bold; min-width: 40px; text-align: center;">${medal}</div>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">${name}</div>
+                                            <div style="font-size: 0.875rem; color: #6b7280;">${voteCount} suara</div>
+                                        </div>
+                                        <div style="font-size: 1.25rem; font-weight: bold; color: #2563eb;">${voteCount}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            rankingContainer.innerHTML = rankingHTML;
+        }
+        
+        function renderSimpleChart(innovations) {
+            const chartContainer = document.getElementById('voteChart');
+            
+            // Get max votes for percentage
+            const maxVotes = Math.max(...innovations.map(s => s.VoteCount || 0), 1);
+            
+            const chartHTML = innovations.map(stat => {
+                const name = stat.name || stat.Name || 'N/A';
+                const voteCount = stat.VoteCount || 0;
+                const percentage = maxVotes > 0 ? (voteCount / maxVotes * 100) : 0;
+                const shortenedName = name.length > 40 ? name.substring(0, 40) + '...' : name;
+                
+                return `
+                    <div style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 600; color: #1f2937; font-size: 0.875rem;">${shortenedName}</span>
+                            <span style="font-weight: bold; color: #2563eb; font-size: 0.875rem;">${voteCount} suara</span>
+                        </div>
+                        <div style="background: #e5e7eb; height: 24px; border-radius: 12px; overflow: hidden;">
+                            <div style="background: linear-gradient(90deg, #2563eb, #3b82f6); height: 100%; width: ${percentage}%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 0.5rem;">
+                                <span style="color: white; font-size: 0.75rem; font-weight: 600;">${percentage.toFixed(1)}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            chartContainer.innerHTML = chartHTML;
+        }
+    </script>
+</body>
+</html>
+{{ end }}
+

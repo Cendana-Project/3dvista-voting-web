@@ -1,0 +1,38 @@
+{{define "list.tmpl.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>{{.Title}}</h1>
+        <p class="subtitle">Select an innovation to view and vote</p>
+        
+        {{if .Grouped}}
+            {{range $groupSlug, $innovations := .Grouped}}
+                <div class="group">
+                    <h2 class="group-title">{{$groupSlug}}</h2>
+                    <div class="innovation-grid">
+                        {{range $innovations}}
+                            <a href="/{{.GroupSlug}}/{{.Slug}}" class="innovation-card">
+                                <h3>{{.Name}}</h3>
+                                {{if .Division}}
+                                    <p class="division">{{.Division | deref}}</p>
+                                {{end}}
+                            </a>
+                        {{end}}
+                    </div>
+                </div>
+            {{end}}
+        {{else}}
+            <p>No innovations found.</p>
+        {{end}}
+    </div>
+</body>
+</html>
+{{end}}
+
