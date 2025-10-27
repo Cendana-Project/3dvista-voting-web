@@ -97,7 +97,38 @@ jobs:
             
             # Wait for containers to be healthy
             echo "⏳ Waiting for containers to be ready..."
-            sleep 10
+            sleep 15
+            
+            # Wait for database to be ready
+            echo "⏳ Waiting for database to be ready..."
+            sleep 5
+            
+            # Run database migrations
+            echo "📊 Running database migrations..."
+            if $DOCKER_COMPOSE_CMD exec -T db psql -U postgres -d voteweb -c "\dt" 2>/dev/null | grep -q "innovations"; then
+              echo "✅ Tables already exist, skipping migration"
+            else
+              echo "📝 Creating tables..."
+              cat migrations/0001_init.sql | $DOCKER_COMPOSE_CMD exec -T db psql -U postgres -d voteweb
+              cat migrations/0002_one_vote_per_ip.sql | $DOCKER_COMPOSE_CMD exec -T db psql -U postgres -d voteweb
+              echo "✅ Migrations completed"
+            fi
+            
+            # Seed data if not exists
+            echo "🌱 Checking if data exists..."
+            DATA_COUNT=$($DOCKER_COMPOSE_CMD exec -T db psql -U postgres -d voteweb -t -c "SELECT COUNT(*) FROM innovations;" 2>/dev/null | tr -d ' \n' || echo "0")
+            if [ "$DATA_COUNT" = "0" ] || [ -z "$DATA_COUNT" ]; then
+              echo "📦 No data found, seeding innovations..."
+              echo "SEED=true" >> .env
+              $DOCKER_COMPOSE_CMD stop app
+              $DOCKER_COMPOSE_CMD up -d app
+              sleep 10
+              sed -i '/^SEED=true$/d' .env
+              $DOCKER_COMPOSE_CMD restart app
+              echo "✅ Seed completed"
+            else
+              echo "✅ Data already exists ($DATA_COUNT innovations)"
+            fi
             
             # Verify containers are running
             echo "🔍 Verifying deployment..."
