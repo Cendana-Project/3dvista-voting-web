@@ -1,4 +1,4 @@
-# VoteWeb - Simple & Secure Voting System
+# VoteWeb - Simple & Secure Voting System.
 
 A production-ready, simple voting web application built with Go, featuring anti-abuse mechanisms and modern security practices.
 
