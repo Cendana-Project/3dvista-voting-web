@@ -28,7 +28,7 @@ func Load() (*Config, error) {
 	_ = godotenv.Load()
 
 	cfg := &Config{
-		DatabaseURL:    getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/voteweb?sslmode=disable"),
+		DatabaseURL:    getEnv("DATABASE_URL", "postgresql://neondb_owner:npg_KDvy8dSflMC6@ep-rapid-snow-a4fr2hyh-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"),
 		IPHashSalt:     getEnv("IP_HASH_SALT", ""),
 		TrustProxy:     getEnvBool("TRUST_PROXY", false),
 		AppBaseURL:     getEnv("APP_BASE_URL", "http://localhost:8080"),
