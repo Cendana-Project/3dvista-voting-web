@@ -37,7 +37,7 @@ func SetupRouter(cfg *config.Config, pool *pgxpool.Pool, service domain.VoteServ
 	staticDir, _ := filepath.Abs("./web/static")
 	router.Static("/static", staticDir)
 	logger.Info("Static files directory", "path", staticDir)
-	
+
 	// Add cache control headers for static files
 	router.Use(func(c *gin.Context) {
 		path := c.Request.URL.Path
@@ -89,7 +89,7 @@ func SetupRouter(cfg *config.Config, pool *pgxpool.Pool, service domain.VoteServ
 	if cfg.AdminCode != "" {
 		analyticsHandler := handlers.NewAnalyticsHandler(service, logger)
 		authMiddleware := middleware.AdminAuth(cfg.AdminCode)
-		
+
 		// Register protected routes directly with auth middleware
 		router.GET("/admin/analytics", authMiddleware, analyticsHandler.ShowAnalytics)
 		router.GET("/admin/api/data", authMiddleware, analyticsHandler.GetAnalyticsData)
@@ -109,7 +109,7 @@ func SetupRouter(cfg *config.Config, pool *pgxpool.Pool, service domain.VoteServ
 	router.POST("/api/vote/:group/:slug", voteHandler.SubmitVote)
 
 	// Page handler (catch-all, must be last)
-	pageHandler := handlers.NewPageHandler(service, logger)
+	pageHandler := handlers.NewPageHandler(service, logger, cfg.AutoVoteOnView)
 	router.GET("/:group/:slug", pageHandler.ShowInnovation)
 
 	return router

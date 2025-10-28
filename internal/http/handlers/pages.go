@@ -3,6 +3,7 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -11,14 +12,16 @@ import (
 )
 
 type PageHandler struct {
-	service domain.VoteService
-	logger  *slog.Logger
+	service  domain.VoteService
+	logger   *slog.Logger
+	autoVote bool
 }
 
-func NewPageHandler(service domain.VoteService, logger *slog.Logger) *PageHandler {
+func NewPageHandler(service domain.VoteService, logger *slog.Logger, autoVote bool) *PageHandler {
 	return &PageHandler{
-		service: service,
-		logger:  logger,
+		service:  service,
+		logger:   logger,
+		autoVote: autoVote,
 	}
 }
 
@@ -70,6 +73,27 @@ func (h *PageHandler) ShowInnovation(c *gin.Context) {
 		}
 	}
 
+	// Auto-vote on first view if enabled, user hasn't voted, and likely not a bot
+	if h.autoVote && !hasVoted && clientIP != "" && !isBot(c.GetHeader("User-Agent")) && c.Query("preview") != "1" {
+		if _, err := h.service.SubmitVote(c.Request.Context(), domain.VoteRequest{
+			GroupSlug: groupSlug,
+			Slug:      slug,
+			ClientIP:  clientIP,
+			UserAgent: c.GetHeader("User-Agent"),
+		}); err != nil {
+			h.logger.ErrorContext(c.Request.Context(), "auto-vote failed",
+				"group_slug", groupSlug,
+				"slug", slug,
+				"error", err)
+		} else {
+			// refresh state
+			if cnt, err := h.service.GetVoteCount(c.Request.Context(), innovation.ID); err == nil {
+				voteCount = cnt
+			}
+			hasVoted = true
+		}
+	}
+
 	// Get CSRF token for the page
 	csrfToken := middleware.GetCSRFToken(c)
 
@@ -79,4 +103,19 @@ func (h *PageHandler) ShowInnovation(c *gin.Context) {
 		"CSRFToken":  csrfToken,
 		"HasVoted":   hasVoted,
 	})
+}
+
+// basic bot detection by user-agent substrings
+func isBot(userAgent string) bool {
+	ua := strings.ToLower(userAgent)
+	if ua == "" {
+		return false
+	}
+	bots := []string{"bot", "crawler", "spider", "bingpreview", "slurp", "curl", "wget", "headless", "python-requests"}
+	for _, b := range bots {
+		if strings.Contains(ua, b) {
+			return true
+		}
+	}
+	return false
 }

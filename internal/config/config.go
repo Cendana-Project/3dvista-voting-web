@@ -19,6 +19,7 @@ type Config struct {
 	Port              string
 	GinMode           string
 	AdminCode         string
+	AutoVoteOnView    bool
 }
 
 // Load reads configuration from environment variables
@@ -27,13 +28,14 @@ func Load() (*Config, error) {
 	_ = godotenv.Load()
 
 	cfg := &Config{
-		DatabaseURL: getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/voteweb?sslmode=disable"),
-		IPHashSalt:  getEnv("IP_HASH_SALT", ""),
-		TrustProxy:  getEnvBool("TRUST_PROXY", false),
-		AppBaseURL:  getEnv("APP_BASE_URL", "http://localhost:8080"),
-		Port:        getEnv("PORT", "8080"),
-		GinMode:     getEnv("GIN_MODE", "debug"),
-		AdminCode:   getEnv("ADMIN_CODE", ""),
+		DatabaseURL:    getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/voteweb?sslmode=disable"),
+		IPHashSalt:     getEnv("IP_HASH_SALT", ""),
+		TrustProxy:     getEnvBool("TRUST_PROXY", false),
+		AppBaseURL:     getEnv("APP_BASE_URL", "http://localhost:8080"),
+		Port:           getEnv("PORT", "8080"),
+		GinMode:        getEnv("GIN_MODE", "debug"),
+		AdminCode:      getEnv("ADMIN_CODE", ""),
+		AutoVoteOnView: getEnvBool("AUTO_VOTE_ON_VIEW", false),
 	}
 
 	// Validate required fields
