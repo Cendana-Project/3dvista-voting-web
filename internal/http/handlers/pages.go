@@ -61,6 +61,9 @@ func (h *PageHandler) ShowInnovation(c *gin.Context) {
 
 	// Check if user has already voted
 	clientIP := c.GetString("client_ip")
+	if clientIP == "" {
+		clientIP = c.ClientIP()
+	}
 	hasVoted := false
 	if clientIP != "" {
 		voted, err := h.service.CheckHasVoted(c.Request.Context(), innovation.ID, clientIP)
