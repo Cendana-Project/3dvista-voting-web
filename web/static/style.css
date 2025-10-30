@@ -465,7 +465,41 @@ body {
     }
 
     .innovation-page {
-        padding: 1.5rem;
+        padding: 1rem; /* tighter card padding on mobile */
+    }
+
+    .container {
+        padding: 1rem 0.75rem; /* reduce outer spacing */
+    }
+
+    .innovation-header {
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+    }
+
+    .vote-count {
+        margin-bottom: 1rem;
+        padding: 1rem; /* reduce counter padding */
+    }
+
+    .count-number {
+        font-size: 2rem; /* slightly smaller for compactness */
+    }
+
+    .vote-button {
+        padding: 0.75rem 1.25rem; /* reduce button height */
+        font-size: 1rem;
+    }
+
+    /* Ensure APO hero image doesn't cause vertical scroll on mobile */
+    .apo-hero {
+        margin-bottom: 1rem;
+    }
+    .apo-hero img {
+        max-width: 65vw;   /* fit nicely within viewport width */
+        max-height: 22vh;  /* cap height so no scroll is needed */
+        height: auto;
+        width: auto;
     }
 }
 
