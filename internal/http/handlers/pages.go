@@ -101,7 +101,7 @@ func (h *PageHandler) ShowInnovation(c *gin.Context) {
 			heroMobile = "/static/kementrian-lembaga-pt/insting-mobile.webp"
 		case "teknologi-hybrid-taman-sanitasi-hts-untuk-pencegahan-pencemaran-lingkungan-dan-daur-ulang-air":
 			hero = "/static/kementrian-lembaga-pt/hts.webp"
-			heroMobile = "/static/kementrian-lembaga-pt/hts-mobile.webp"
+			heroMobile = "/static/kementrian-lembaga-pt/hts-mobile-1.webp" // corrected mobile asset
 		case "inovasi-saschieversity":
 			hero = "/static/kementrian-lembaga-pt/saschieversity.webp"
 			heroMobile = "/static/kementrian-lembaga-pt/saschieversity-mobile.webp"
@@ -165,6 +165,25 @@ func (h *PageHandler) ShowInnovation(c *gin.Context) {
 		case "ketupat-lebaran-kegunaan-kartu-kepatuhan-minum-tablet-tambah-darah":
 			hero = "/static/pemda-jabar/ketupat-lebaran.webp"
 			heroMobile = "/static/pemda-jabar/ketupat-lebaran-mobile.webp"
+		}
+	} else if innovation.GroupSlug == "pemda-kota" {
+		// City governments (pemkot) mappings
+		switch innovation.Slug {
+		case "smart-k-sistem-manajemen-akuakultur-rekayasa-teknologi-dan-kemitraan":
+			hero = "/static/pemkot/smart-k.webp"
+			heroMobile = "/static/pemkot/smart-k-mobile.webp"
+		case "bung-senja-tabungan-sedot-tinja":
+			hero = "/static/pemkot/buang-senja.webp"
+			heroMobile = "/static/pemkot/buang-senja-mobile.webp"
+		case "gerakan-orang-cimahi-pilah-sampah-grak-ompimpah":
+			hero = "/static/pemkot/grak-ompimpah.webp"
+			heroMobile = "/static/pemkot/grak-ompimpah-mobile.webp"
+		case "bogor-smart-health":
+			hero = "/static/pemkot/bogor-smart-health.webp"
+			heroMobile = "/static/pemkot/bogor-smart-health-mobile.webp"
+		case "konservasi-mata-air-menjadi-ruang-terbuka-hijau-ruang-publik":
+			hero = "/static/pemkot/konversi-mata-air.webp"
+			heroMobile = "/static/pemkot/konversi-mata-air-mobile.webp"
 		}
 	}
 
