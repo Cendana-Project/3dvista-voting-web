@@ -5,14 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ .Innovation.Name }} - Vote</title>
-    <link rel="stylesheet" href="/static/style.css?v=2">
+    <link rel="stylesheet" href="/static/style.css?v=7">
 </head>
 <body>
     <div class="container">
 <div class="innovation-page">
-    {{ if .ShowApoImage }}
+    {{ if .Hero }}
     <div class="apo-hero">
-        <img src="/static/6.png" alt="APO Mayangan" />
+        <picture>
+            {{ if .HeroMobile }}<source srcset="{{ .HeroMobile }}" media="(max-width: 640px)">{{ end }}
+            <img src="{{ .Hero }}" alt="Hero" />
+        </picture>
     </div>
     {{ end }}
     <div class="innovation-header">

@@ -49,11 +49,14 @@ body {
     margin-bottom: 1.5rem;
 }
 
+.apo-hero picture, .apo-hero img {
+    display: block;
+}
+
 .apo-hero img {
-    max-width: 360px;
+    max-width: 220px;
     width: 100%;
     height: auto;
-    display: block;
 }
 
 .innovation-header {
@@ -452,7 +455,7 @@ body {
 
 @media (max-width: 640px) {
     .innovation-header h1 {
-        font-size: 1.5rem;
+        font-size: clamp(1.1rem, 4.5vw, 1.4rem);
     }
 
     .count-number {
@@ -470,20 +473,31 @@ body {
 
     .container {
         padding: 1rem 0.75rem; /* reduce outer spacing */
+        min-height: 100dvh; /* fill viewport height to avoid bottom gap */
+        display: flex;
+        align-items: stretch;
     }
 
     .innovation-header {
-        margin-bottom: 1.25rem;
-        padding-bottom: 1rem;
+        margin-bottom: 0.9rem;
+        padding-bottom: 0.75rem;
+    }
+
+    /* Let the card size to its content to avoid big empty area inside */
+    .innovation-page {
+        width: 100%;
+        margin: 0 auto;
+        min-height: initial;
+        display: block;
     }
 
     .vote-count {
-        margin-bottom: 1rem;
-        padding: 1rem; /* reduce counter padding */
+        margin-bottom: 0.75rem;
+        padding: 0.75rem; /* reduce counter padding */
     }
 
     .count-number {
-        font-size: 2rem; /* slightly smaller for compactness */
+        font-size: 1.75rem; /* slightly smaller for compactness */
     }
 
     .vote-button {
@@ -493,13 +507,20 @@ body {
 
     /* Ensure APO hero image doesn't cause vertical scroll on mobile */
     .apo-hero {
-        margin-bottom: 1rem;
+        margin-bottom: 1.12rem;
     }
     .apo-hero img {
-        max-width: 65vw;   /* fit nicely within viewport width */
-        max-height: 22vh;  /* cap height so no scroll is needed */
-        height: auto;
-        width: auto;
+        max-width: 70vw;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Make primary action comfortable to tap and visually balanced */
+    .vote-button {
+        width: 100%;
+        max-width: 320px;
+        margin-left: auto;
+        margin-right: auto;
     }
 }
 
