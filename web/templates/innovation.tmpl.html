@@ -10,6 +10,11 @@
 <body>
     <div class="container">
 <div class="innovation-page">
+    {{ if .ShowApoImage }}
+    <div class="apo-hero">
+        <img src="/static/6.png" alt="APO Mayangan" />
+    </div>
+    {{ end }}
     <div class="innovation-header">
         <h1>{{ .Innovation.Name }}</h1>
         {{ if .Innovation.Division }}

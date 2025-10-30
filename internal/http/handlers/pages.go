@@ -74,9 +74,10 @@ func (h *PageHandler) ShowInnovation(c *gin.Context) {
 	csrfToken := middleware.GetCSRFToken(c)
 
 	c.HTML(http.StatusOK, "innovation.tmpl.html", gin.H{
-		"Innovation": innovation,
-		"VoteCount":  voteCount,
-		"CSRFToken":  csrfToken,
-		"HasVoted":   hasVoted,
+		"Innovation":   innovation,
+		"VoteCount":    voteCount,
+		"CSRFToken":    csrfToken,
+		"HasVoted":     hasVoted,
+		"ShowApoImage": innovation.GroupSlug == "bumn-bumd" && innovation.Slug == "alat-pemecah-ombak-apo-desa-mayangan-subang",
 	})
 }

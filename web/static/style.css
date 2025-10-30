@@ -41,6 +41,21 @@ body {
     box-shadow: var(--shadow-lg);
 }
 
+/* APO hero image (only for specific page) */
+.apo-hero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.apo-hero img {
+    max-width: 420px;
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
 .innovation-header {
     text-align: center;
     margin-bottom: 3rem;
@@ -146,6 +161,13 @@ body {
     box-shadow: var(--shadow-lg);
     max-width: 400px;
     width: 90%;
+    /* Ensure dialog is centered consistently across browsers */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0; /* avoid UA default margins that can push it to top-left */
+    z-index: 1000;
 }
 
 .modal::backdrop {
