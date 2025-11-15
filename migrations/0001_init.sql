@@ -37,3 +37,5 @@ CREATE INDEX IF NOT EXISTS idx_votes_innovation ON votes(innovation_id);
 CREATE INDEX IF NOT EXISTS idx_innovations_group_slug ON innovations(group_slug);
 
 
+
+

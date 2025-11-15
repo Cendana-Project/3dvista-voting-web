@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"log/slog"
 	"net/http"
 
@@ -23,6 +22,16 @@ func NewVoteHandler(service domain.VoteService, logger *slog.Logger) *VoteHandle
 }
 
 func (h *VoteHandler) SubmitVote(c *gin.Context) {
+	// Voting system is closed
+	c.JSON(http.StatusForbidden, gin.H{
+		"error":   "voting_closed",
+		"message": "Sistem voting telah ditutup. Terima kasih atas partisipasi Anda.",
+	})
+	return
+
+	// Code below is disabled while voting is closed
+	// Uncomment to re-enable voting functionality
+	/*
 	groupSlug := c.Param("group")
 	slug := c.Param("slug")
 
@@ -75,6 +84,8 @@ func (h *VoteHandler) SubmitVote(c *gin.Context) {
 		"message":    result.Message,
 		"vote_count": result.VoteCount,
 	})
+	*/
 }
+
 
 
